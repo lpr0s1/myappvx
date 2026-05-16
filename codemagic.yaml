@@ -1,20 +1,27 @@
 
 workflows:
   ios-workflow:
-    name: vxkit
+    name: Build vxkit Simple
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
-      groups:
-        - app_store_credentials
       flutter: stable
       xcode: latest
-      cocoapods: default
     scripts:
-      - name: Get Flutter packages
-        script: flutter packages pub get
-      - name: Flutter build ipa
+      - name: Nettoyage et Régénération
         script: |
-          flutter build ipa --release --no-codesign
+          rm -rf ios
+          flutter create --platforms ios .
+          flutter clean
+          flutter packages pub get
+      - name: Compilation brute iOS
+        script: | 
+          flutter build ios --release --no-codesign
+      - name: Création du package IPA pour Sideloadly
+        script: | 
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r $CM_BUILD_DIR/vxkit.ipa Payload
     artifacts:
-      - build/ios/ipa/*.ipa
+      - "*.ipa"
