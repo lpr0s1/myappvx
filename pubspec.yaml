@@ -11,8 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  webview_flutter: ^4.7.0
-  # On ne met PAS flutter/services ici !
+  # Utilisé pour ouvrir le lien externe :
+  url_launcher: ^6.2.5
 
 dev_dependencies:
   flutter_test:
