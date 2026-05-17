@@ -8,22 +8,17 @@ workflows:
       flutter: stable
       xcode: latest
     scripts:
-      - name: Nettoyage et Configuration iOS
+      - name: Nettoyage et Régénération
         script: |
           rm -rf ios
           flutter create --platforms ios .
-          
-          # FORCE iOS VERSION 14.0 (Correction de l'erreur WebView)
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [^;]*;/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/g' ios/Runner.xcodeproj/project.pbxproj
-          echo "platform :ios, '14.0'" > ios/Podfile
-          
           flutter clean
           flutter packages pub get
-          cd ios && pod install && cd ..
       - name: Compilation brute iOS
         script: | 
+          # Puisqu'il n'y a plus aucun plugin natif lourd, ceci va compiler instantanément
           flutter build ios --release --no-codesign
-      - name: Création du package IPA
+      - name: Création du package IPA pour Sideloadly
         script: | 
           cd build/ios/iphoneos
           mkdir -p Payload
