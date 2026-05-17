@@ -8,32 +8,35 @@ workflows:
       flutter: stable
       xcode: latest
     scripts:
-      - name: Nettoyage et Régénération
+      - name: Nettoyage et Régénération du projet
         script: |
+          # 1. On supprime l'ancien dossier ios s'il existe
           rm -rf ios
+          
+          # 2. On recrée un projet iOS vierge et propre
           flutter create --platforms ios .
+          
+          # 3. On nettoie les caches Flutter
           flutter clean
+          
+          # 4. On récupère les packages (dont webview_flutter)
           flutter packages pub get
-      - name: Injection des règles anti-signature (XCConfig & Pods)
+          
+      - name: Génération automatique et installation de CocoaPods
         script: |
-          # 1. On force la désactivation des signatures dans le fichier de config Flutter
-          echo "CODE_SIGNING_ALLOWED=NO" >> ios/Flutter/Release.xcconfig
-          echo "CODE_SIGNING_REQUIRED=NO" >> ios/Flutter/Release.xcconfig
-          echo "CODE_SIGN_IDENTITY=" >> ios/Flutter/Release.xcconfig
-          echo "CODE_SIGNING_REQUIRED[sdk=iphoneos*]=NO" >> ios/Flutter/Release.xcconfig
-          echo "CODE_SIGNING_ALLOWED[sdk=iphoneos*]=NO" >> ios/Flutter/Release.xcconfig
+          # Cette commande force Flutter à générer les fichiers de configuration iOS natifs (dont le Podfile)
+          flutter build ios --config-only
           
-          # 2. On installe les dépendances CocoaPods (nécessaires pour webview_flutter)
-          cd ios && pod init && pod install && cd ..
+          # On entre dans le dossier ios généré, on installe les pods pour la WebView, puis on ressort
+          cd ios
+          pod install
+          cd ..
           
-          # 3. On patche le Podfile de CocoaPods pour interdire la signature sur toutes les dépendances compilées
-          sed -i '' "s/flutter_additional_ios_build_settings(target)/flutter_additional_ios_build_settings(target); target.build_configurations.each { |c| c.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'; c.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'; c.build_settings['CODE_SIGN_IDENTITY'] = '' }/g" ios/Podfile
-          
-          # 4. On réexécute l'installation propre avec notre fichier patché
-          cd ios && pod install && cd ..
       - name: Compilation brute iOS
         script: | 
+          # Maintenant que CocoaPods est configuré avec la WebView, on compile sans signature
           flutter build ios --release --no-codesign
+          
       - name: Création du package IPA pour Sideloadly
         script: | 
           cd build/ios/iphoneos
