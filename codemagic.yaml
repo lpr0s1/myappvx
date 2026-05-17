@@ -1,6 +1,7 @@
+
 workflows:
   ios-workflow:
-    name: Build vxkit Simple
+    name: Build vxkit
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
@@ -15,6 +16,7 @@ workflows:
           flutter packages pub get
       - name: Compilation brute iOS
         script: | 
+          # Puisqu'il n'y a plus aucun plugin natif lourd, ceci va compiler instantanément
           flutter build ios --release --no-codesign
       - name: Création du package IPA pour Sideloadly
         script: | 
