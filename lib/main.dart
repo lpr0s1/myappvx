@@ -1,7 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui';
 
 void main() {
@@ -18,11 +17,11 @@ class VxKitApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.black,
+        scaffoldBackgroundColor: const Color(0xFF050505),
         colorScheme: const ColorScheme.dark(
           primary: Colors.white,
           secondary: Colors.grey,
-          surface: Color(0xFF121212),
+          surface: Color(0xFF0F0F0F),
         ),
         useMaterial3: true,
       ),
@@ -44,7 +43,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final pages = [
     const HomePage(),
     const ToolsPage(),
-    const ExternalMoviesPage(),
+    const MoviesPage(),
     const SettingsPage(),
   ];
 
@@ -54,18 +53,18 @@ class _MainNavigationState extends State<MainNavigation> {
       body: pages[index],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1), width: 0.5)),
+          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08), width: 0.5)),
         ),
         child: NavigationBar(
-          backgroundColor: Colors.black,
-          indicatorColor: Colors.white.withOpacity(0.1),
+          backgroundColor: const Color(0xFF050505),
+          indicatorColor: Colors.white.withOpacity(0.08),
           selectedIndex: index,
           onDestinationSelected: (i) => setState(() => index = i),
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.home_filled), label: 'Accueil'),
-            NavigationDestination(icon: Icon(Icons.terminal), label: 'Outils'),
-            NavigationDestination(icon: Icon(Icons.movie_filter), label: 'Films'),
-            NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Réglages'),
+            NavigationDestination(icon: Icon(Icons.home_filled), label: 'Home'),
+            NavigationDestination(icon: Icon(Icons.terminal), label: 'Tools'),
+            NavigationDestination(icon: Icon(Icons.movie_creation_outlined), label: 'Movies'),
+            NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Settings'),
           ],
         ),
       ),
@@ -73,7 +72,7 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 }
 
-// --- COMPOSANT DESIGN: GLASS CARD ---
+// --- DESIGN DE BASE: LE LIQUID GLASS CARD ---
 class GlassCard extends StatelessWidget {
   final Widget child;
   const GlassCard({super.key, required this.child});
@@ -81,15 +80,23 @@ class GlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            color: Colors.white.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.08)),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.05),
+                Colors.white.withOpacity(0.01),
+              ],
+            ),
           ),
           child: child,
         ),
@@ -98,20 +105,45 @@ class GlassCard extends StatelessWidget {
   }
 }
 
-// --- PAGE: ACCUEIL ---
+// --- PAGE: HOME ---
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.security, size: 100, color: Colors.white),
-            SizedBox(height: 20),
-            Text("VXKIT", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 5)),
-            Text("DÉVELOPPÉ PAR HX", style: TextStyle(color: Colors.white54, letterSpacing: 2)),
+            const Icon(Icons.security, size: 90, color: Colors.white),
+            const SizedBox(height: 24),
+            const Text(
+              "VXKIT",
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 8,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: const Text(
+                "DEVELOPED BY HX",
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
+                  color: Colors.white70,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -119,21 +151,41 @@ class HomePage extends StatelessWidget {
   }
 }
 
-// --- PAGE: OUTILS ---
+// --- PAGE: TOOLS (REFACTORISÉE AVEC COPIER ET SCROLL) ---
 class ToolsPage extends StatelessWidget {
   const ToolsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("PENTEST KIT"), backgroundColor: Colors.black),
+      appBar: AppBar(
+        title: const Text("PENTEST SUITE", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+        backgroundColor: const Color(0xFF050505),
+        centerTitle: true,
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: const [
-          ToolActionCard(title: "Nmap", cmd: "nmap -sV -A <ip>", desc: "Scanner réseau complet"),
-          ToolActionCard(title: "Metasploit", cmd: "msfconsole", desc: "Framework d'exploitation"),
-          ToolActionCard(title: "SQLMap", cmd: "sqlmap -u <url> --batch", desc: "Injection SQL automatique"),
-          ToolActionCard(title: "John", cmd: "john --wordlist=rockyou.txt hash", desc: "Craqueur de mots de passe"),
+          ToolActionCard(
+            title: "Nmap",
+            desc: "Scanner de ports et de services réseau",
+            cmd: "pkg install nmap && nmap -sV -p 1-65535 <cible>",
+          ),
+          ToolActionCard(
+            title: "Hydra",
+            desc: "Brute force multi-protocoles ultra rapide",
+            cmd: "hydra -l admin -P passwords.txt ssh://<cible>",
+          ),
+          ToolActionCard(
+            title: "SQLMap",
+            desc: "Détection automatique d'injections SQL",
+            cmd: "git clone https://github.com/sqlmapproject/sqlmap.git",
+          ),
+          ToolActionCard(
+            title: "Metasploit",
+            desc: "Outil complet de pénétration et d'exploitation",
+            cmd: "curl -LO https://raw.githubusercontent.com/Termux-pod/termux-pod/main/msf.sh && bash msf.sh",
+          ),
         ],
       ),
     );
@@ -141,39 +193,74 @@ class ToolsPage extends StatelessWidget {
 }
 
 class ToolActionCard extends StatelessWidget {
-  final String title, cmd, desc;
-  const ToolActionCard({super.key, required this.title, required this.cmd, required this.desc});
+  final String title, desc, cmd;
+  const ToolActionCard({super.key, required this.title, required this.desc, required this.cmd});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: GlassCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            Text(desc, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              desc,
+              style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.6)),
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(8)),
-                      child: Text(cmd, style: const TextStyle(fontFamily: 'monospace', color: Colors.greenAccent, fontSize: 13)),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white.withOpacity(0.05)),
+                      ),
+                      child: Text(
+                        cmd,
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.copy, size: 20, color: Colors.white70),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.05),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color: Colors.white.withOpacity(0.08)),
+                    ),
+                  ),
+                  icon: const Icon(Icons.copy_rounded, size: 18, color: Colors.white),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: cmd));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Copié !"), duration: Duration(seconds: 1)),
+                      SnackBar(
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        content: const Text(
+                          "Commande copiée !",
+                          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                        ),
+                        duration: const Duration(seconds: 1),
+                      ),
                     );
                   },
                 )
@@ -186,89 +273,162 @@ class ToolActionCard extends StatelessWidget {
   }
 }
 
-// --- PAGE: MOVIES (BOUTON LIEN EXTERNE) ---
-class ExternalMoviesPage extends StatelessWidget {
-  const ExternalMoviesPage({super.key});
-
-  Future<void> _launchURL() async {
-    final Uri url = Uri.parse('https://hvxsrc.online/v/m');
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('Impossible d\'ouvrir $url');
-    }
-  }
+// --- PAGE: MOVIES (NATIVE SANS WEBVIEW) ---
+class MoviesPage extends StatelessWidget {
+  const MoviesPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: GlassCard(
+      appBar: AppBar(
+        title: const Text("MOVIES & LINKS", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+        backgroundColor: const Color(0xFF050505),
+        centerTitle: true,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // En-tête de la page
+          GlassCard(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.movie_outlined, size: 64, color: Colors.white),
-                const SizedBox(height: 16),
+                const Icon(Icons.movie_filter_outlined, size: 40, color: Colors.white),
+                const SizedBox(height: 12),
                 const Text(
-                  "ACCÉDER AU STREAMING",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1),
+                  "Serveur de Streaming",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  "Le contenu sera ouvert dans votre navigateur pour une meilleure expérience.",
+                const SizedBox(height: 6),
+                Text(
+                  "Accédez à vos flux multimédias.",
+                  style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
                 ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: _launchURL,
-                  icon: const Icon(Icons.open_in_new),
-                  label: const Text("OUVRIR LE SITE"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white.withOpacity(0.08)),
+                        ),
+                        child: const Text(
+                          "https://hvxsrc.online/v/m",
+                          style: TextStyle(fontFamily: 'monospace', fontSize: 11, color: Colors.white),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.copy),
+                      onPressed: () {
+                        Clipboard.setData(const ClipboardData(text: "https://hvxsrc.online/v/m"));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Lien copié !")),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 24),
+          const Text(
+            "SOURCES DISPONIBLES",
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.grey),
+          ),
+          const SizedBox(height: 12),
+          const MovieSourceCard(title: "Main Server (hvxsrc)", url: "https://hvxsrc.online/v/m", ping: "FAST"),
+          const MovieSourceCard(title: "Backup Server", url: "https://hvxsrc.online/v/m?backup=true", ping: "NORMAL"),
+        ],
+      ),
+    );
+  }
+}
+
+class MovieSourceCard extends StatelessWidget {
+  final String title, url, ping;
+  const MovieSourceCard({super.key, required this.title, required this.url, required this.ping});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GlassCard(
+        child: ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.dns_outlined, color: Colors.white),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(url, style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11)),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: ping == "FAST" ? Colors.green.withOpacity(0.2) : Colors.amber.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              ping,
+              style: TextStyle(
+                color: ping == "FAST" ? Colors.greenAccent : Colors.amberAccent,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: url));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Lien du serveur '$title' copié !")),
+            );
+          },
         ),
       ),
     );
   }
 }
 
-// --- PAGE: RÉGLAGES ---
+// --- PAGE: SETTINGS ---
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("SYSTÈME"), backgroundColor: Colors.black),
+      appBar: AppBar(
+        title: const Text("SETTINGS", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+        backgroundColor: const Color(0xFF050505),
+        centerTitle: true,
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             const GlassCard(
               child: ListTile(
-                leading: Icon(Icons.person_pin),
-                title: Text("Développeur"),
-                subtitle: Text("Hx"),
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.person_outline, color: Colors.white),
+                title: Text("Développeur", style: TextStyle(fontWeight: FontWeight.bold)),
+                trailing: Text("Hx", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
               ),
             ),
             const SizedBox(height: 12),
             const GlassCard(
               child: ListTile(
-                leading: Icon(Icons.verified_user_outlined),
-                title: Text("Version de l'application"),
-                subtitle: Text("1.0.0-PRO"),
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.info_outline, color: Colors.white),
+                title: Text("Version", style: TextStyle(fontWeight: FontWeight.bold)),
+                trailing: Text("1.0.0 Stable", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
               ),
             ),
             const Spacer(),
-            Text("VXKIT © 2024", style: TextStyle(color: Colors.white.withOpacity(0.2), letterSpacing: 3)),
-            const SizedBox(height: 20),
+            Text(
+              "VXKIT SYSTEM © 2026",
+              style: TextStyle(color: Colors.white.withOpacity(0.15), fontSize: 10, letterSpacing: 2),
+            ),
           ],
         ),
       ),
