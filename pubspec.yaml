@@ -1,4 +1,4 @@
-```yaml
+
 name: vxkit
 description: "VxKit Pentest Tool & Media by Hx"
 publish_to: 'none'
@@ -20,4 +20,3 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-```
