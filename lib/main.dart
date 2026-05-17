@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui';
 
 void main() {
@@ -44,7 +44,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final pages = [
     const HomePage(),
     const ToolsPage(),
-    const MoviesPage(),
+    const ExternalMoviesPage(),
     const SettingsPage(),
   ];
 
@@ -62,10 +62,10 @@ class _MainNavigationState extends State<MainNavigation> {
           selectedIndex: index,
           onDestinationSelected: (i) => setState(() => index = i),
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.home_filled), label: 'Home'),
-            NavigationDestination(icon: Icon(Icons.terminal), label: 'Tools'),
-            NavigationDestination(icon: Icon(Icons.movie_creation_outlined), label: 'Movies'),
-            NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Settings'),
+            NavigationDestination(icon: Icon(Icons.home_filled), label: 'Accueil'),
+            NavigationDestination(icon: Icon(Icons.terminal), label: 'Outils'),
+            NavigationDestination(icon: Icon(Icons.movie_filter), label: 'Films'),
+            NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Réglages'),
           ],
         ),
       ),
@@ -73,7 +73,7 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 }
 
-// --- DESIGN COMPONENT: GLASS CARD ---
+// --- COMPOSANT DESIGN: GLASS CARD ---
 class GlassCard extends StatelessWidget {
   final Widget child;
   const GlassCard({super.key, required this.child});
@@ -98,20 +98,20 @@ class GlassCard extends StatelessWidget {
   }
 }
 
-// --- PAGE: HOME ---
+// --- PAGE: ACCUEIL ---
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.security, size: 100, color: Colors.white),
-            const SizedBox(height: 20),
-            const Text("VXKIT", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 5)),
-            Text("BY HX", style: TextStyle(color: Colors.white.withOpacity(0.5), letterSpacing: 2)),
+            Icon(Icons.security, size: 100, color: Colors.white),
+            SizedBox(height: 20),
+            Text("VXKIT", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 5)),
+            Text("DÉVELOPPÉ PAR HX", style: TextStyle(color: Colors.white54, letterSpacing: 2)),
           ],
         ),
       ),
@@ -119,21 +119,21 @@ class HomePage extends StatelessWidget {
   }
 }
 
-// --- PAGE: TOOLS ---
+// --- PAGE: OUTILS ---
 class ToolsPage extends StatelessWidget {
   const ToolsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("PENTEST TOOLS"), backgroundColor: Colors.black),
+      appBar: AppBar(title: const Text("PENTEST KIT"), backgroundColor: Colors.black),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: const [
-          ToolActionCard(title: "Nmap", cmd: "pkg install nmap && nmap -Pn <ip>"),
-          ToolActionCard(title: "Metasploit", cmd: "pkg install metasploit"),
-          ToolActionCard(title: "SQLMap", cmd: "git clone https://github.com/sqlmapproject/sqlmap.git"),
-          ToolActionCard(title: "Sherlock", cmd: "python3 sherlock <username>"),
+          ToolActionCard(title: "Nmap", cmd: "nmap -sV -A <ip>", desc: "Scanner réseau complet"),
+          ToolActionCard(title: "Metasploit", cmd: "msfconsole", desc: "Framework d'exploitation"),
+          ToolActionCard(title: "SQLMap", cmd: "sqlmap -u <url> --batch", desc: "Injection SQL automatique"),
+          ToolActionCard(title: "John", cmd: "john --wordlist=rockyou.txt hash", desc: "Craqueur de mots de passe"),
         ],
       ),
     );
@@ -141,8 +141,8 @@ class ToolsPage extends StatelessWidget {
 }
 
 class ToolActionCard extends StatelessWidget {
-  final String title, cmd;
-  const ToolActionCard({super.key, required this.title, required this.cmd});
+  final String title, cmd, desc;
+  const ToolActionCard({super.key, required this.title, required this.cmd, required this.desc});
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +153,8 @@ class ToolActionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 10),
+            Text(desc, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -162,16 +163,17 @@ class ToolActionCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(8)),
-                      child: Text(cmd, style: const TextStyle(fontFamily: 'monospace', color: Colors.greenAccent)),
+                      child: Text(cmd, style: const TextStyle(fontFamily: 'monospace', color: Colors.greenAccent, fontSize: 13)),
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.copy, size: 20),
+                  icon: const Icon(Icons.copy, size: 20, color: Colors.white70),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: cmd));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Commande copiée !"), duration: Duration(seconds: 1)),
+                      const SnackBar(content: Text("Copié !"), duration: Duration(seconds: 1)),
                     );
                   },
                 )
@@ -184,48 +186,74 @@ class ToolActionCard extends StatelessWidget {
   }
 }
 
-// --- PAGE: MOVIES (WEBVIEW) ---
-class MoviesPage extends StatefulWidget {
-  const MoviesPage({super.key});
-  @override
-  State<MoviesPage> createState() => _MoviesPageState();
-}
+// --- PAGE: MOVIES (BOUTON LIEN EXTERNE) ---
+class ExternalMoviesPage extends StatelessWidget {
+  const ExternalMoviesPage({super.key});
 
-class _MoviesPageState extends State<MoviesPage> {
-  late final WebViewController controller;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.black)
-      ..loadRequest(Uri.parse('https://hvxsrc.online/v/m'));
+  Future<void> _launchURL() async {
+    final Uri url = Uri.parse('https://hvxsrc.online/v/m');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Impossible d\'ouvrir $url');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("MOVIES"), backgroundColor: Colors.black),
-      body: WebViewWidget(controller: controller),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: GlassCard(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.movie_outlined, size: 64, color: Colors.white),
+                const SizedBox(height: 16),
+                const Text(
+                  "ACCÉDER AU STREAMING",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "Le contenu sera ouvert dans votre navigateur pour une meilleure expérience.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: _launchURL,
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text("OUVRIR LE SITE"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
 
-// --- PAGE: SETTINGS ---
+// --- PAGE: RÉGLAGES ---
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("PARAMÈTRES"), backgroundColor: Colors.black),
+      appBar: AppBar(title: const Text("SYSTÈME"), backgroundColor: Colors.black),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             const GlassCard(
               child: ListTile(
-                leading: Icon(Icons.person_outline),
+                leading: Icon(Icons.person_pin),
                 title: Text("Développeur"),
                 subtitle: Text("Hx"),
               ),
@@ -233,17 +261,17 @@ class SettingsPage extends StatelessWidget {
             const SizedBox(height: 12),
             const GlassCard(
               child: ListTile(
-                leading: Icon(Icons.info_outline),
-                title: Text("Version"),
-                subtitle: Text("1.0.0 Stable"),
+                leading: Icon(Icons.verified_user_outlined),
+                title: Text("Version de l'application"),
+                subtitle: Text("1.0.0-PRO"),
               ),
             ),
             const Spacer(),
-            Text("VXKIT © 2024", style: TextStyle(color: Colors.white.withOpacity(0.2))),
+            Text("VXKIT © 2024", style: TextStyle(color: Colors.white.withOpacity(0.2), letterSpacing: 3)),
+            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 }
-
