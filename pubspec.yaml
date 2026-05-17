@@ -11,10 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  # Modules indispensables pour tes nouvelles fonctions :
   webview_flutter: ^4.7.0
-  flutter/services:
-    sdk: flutter
+  # On ne met PAS flutter/services ici !
 
 dev_dependencies:
   flutter_test:
