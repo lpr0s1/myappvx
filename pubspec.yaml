@@ -1,6 +1,6 @@
-
+```yaml
 name: vxkit
-description: "VxKit Pentest Tool by Hx"
+description: "VxKit Pentest Tool & Media by Hx"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -11,8 +11,6 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  # Utilisé pour ouvrir le lien externe :
-  url_launcher: ^6.2.5
 
 dev_dependencies:
   flutter_test:
@@ -21,3 +19,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+```
