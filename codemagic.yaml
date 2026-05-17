@@ -1,3 +1,4 @@
+
 workflows:
   ios-workflow:
     name: Build vxkit
@@ -13,9 +14,25 @@ workflows:
           flutter create --platforms ios .
           flutter clean
           flutter packages pub get
+      - name: Injection des règles anti-signature (XCConfig & Pods)
+        script: |
+          # 1. On force la désactivation des signatures dans le fichier de config Flutter
+          echo "CODE_SIGNING_ALLOWED=NO" >> ios/Flutter/Release.xcconfig
+          echo "CODE_SIGNING_REQUIRED=NO" >> ios/Flutter/Release.xcconfig
+          echo "CODE_SIGN_IDENTITY=" >> ios/Flutter/Release.xcconfig
+          echo "CODE_SIGNING_REQUIRED[sdk=iphoneos*]=NO" >> ios/Flutter/Release.xcconfig
+          echo "CODE_SIGNING_ALLOWED[sdk=iphoneos*]=NO" >> ios/Flutter/Release.xcconfig
+          
+          # 2. On installe les dépendances CocoaPods (nécessaires pour webview_flutter)
+          cd ios && pod init && pod install && cd ..
+          
+          # 3. On patche le Podfile de CocoaPods pour interdire la signature sur toutes les dépendances compilées
+          sed -i '' "s/flutter_additional_ios_build_settings(target)/flutter_additional_ios_build_settings(target); target.build_configurations.each { |c| c.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'; c.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'; c.build_settings['CODE_SIGN_IDENTITY'] = '' }/g" ios/Podfile
+          
+          # 4. On réexécute l'installation propre avec notre fichier patché
+          cd ios && pod install && cd ..
       - name: Compilation brute iOS
         script: | 
-          # Puisqu'il n'y a plus aucun plugin natif lourd, ceci va compiler instantanément
           flutter build ios --release --no-codesign
       - name: Création du package IPA pour Sideloadly
         script: | 
